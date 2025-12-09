@@ -1,0 +1,42 @@
+﻿@page "/goals"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using BudgetPlanner.Domain
+@using BudgetPlanner.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<BudgetPlanner.Data.BudgetPlannerContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="goals/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Goals">
+    <PropertyColumn Property="goals => goals.BudgetId" />
+    <PropertyColumn Property="goals => goals.DateStart" />
+    <PropertyColumn Property="goals => goals.DateEnd" />
+    <PropertyColumn Property="goals => goals.DateCreated" />
+    <PropertyColumn Property="goals => goals.DateUpdated" />
+    <PropertyColumn Property="goals => goals.CreatedBy" />
+    <PropertyColumn Property="goals => goals.UpdatedBy" />
+
+    <TemplateColumn Context="goals">
+        <a href="@($"goals/edit?id={goals.Id}")">Edit</a> |
+        <a href="@($"goals/details?id={goals.Id}")">Details</a> |
+        <a href="@($"goals/delete?id={goals.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private BudgetPlannerContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

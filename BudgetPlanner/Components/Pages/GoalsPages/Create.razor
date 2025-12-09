@@ -1,0 +1,74 @@
+﻿@page "/goals/create"
+@using Microsoft.EntityFrameworkCore
+@using BudgetPlanner.Domain
+@inject IDbContextFactory<BudgetPlanner.Data.BudgetPlannerContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Goals</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Goals" OnValidSubmit="AddGoals" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="budgetid" class="form-label">BudgetId:</label> 
+                <InputText id="budgetid" @bind-Value="Goals.BudgetId" class="form-control" /> 
+                <ValidationMessage For="() => Goals.BudgetId" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="datestart" class="form-label">DateStart:</label> 
+                <InputDate id="datestart" @bind-Value="Goals.DateStart" class="form-control" /> 
+                <ValidationMessage For="() => Goals.DateStart" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="dateend" class="form-label">DateEnd:</label> 
+                <InputDate id="dateend" @bind-Value="Goals.DateEnd" class="form-control" /> 
+                <ValidationMessage For="() => Goals.DateEnd" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="datecreated" class="form-label">DateCreated:</label> 
+                <InputDate id="datecreated" @bind-Value="Goals.DateCreated" class="form-control" /> 
+                <ValidationMessage For="() => Goals.DateCreated" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="dateupdated" class="form-label">DateUpdated:</label> 
+                <InputDate id="dateupdated" @bind-Value="Goals.DateUpdated" class="form-control" /> 
+                <ValidationMessage For="() => Goals.DateUpdated" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="createdby" class="form-label">CreatedBy:</label> 
+                <InputText id="createdby" @bind-Value="Goals.CreatedBy" class="form-control" /> 
+                <ValidationMessage For="() => Goals.CreatedBy" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="updatedby" class="form-label">UpdatedBy:</label> 
+                <InputText id="updatedby" @bind-Value="Goals.UpdatedBy" class="form-control" /> 
+                <ValidationMessage For="() => Goals.UpdatedBy" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/goals">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Goals Goals { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddGoals()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Goals.Add(Goals);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/goals");
+    }
+}
