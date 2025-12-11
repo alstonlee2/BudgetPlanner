@@ -1,0 +1,64 @@
+﻿@page "/goals/details"
+@using Microsoft.EntityFrameworkCore
+@using BudgetPlanner1.Domain
+@inject IDbContextFactory<BudgetPlanner1.Data.BudgetPlanner1Context> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Goal</h2>
+    <hr />
+    @if (goal is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">GoalId</dt>
+            <dd class="col-sm-10">@goal.GoalId</dd>
+            <dt class="col-sm-2">Name</dt>
+            <dd class="col-sm-10">@goal.Name</dd>
+            <dt class="col-sm-2">Description</dt>
+            <dd class="col-sm-10">@goal.Description</dd>
+            <dt class="col-sm-2">TargetAmount</dt>
+            <dd class="col-sm-10">@goal.TargetAmount</dd>
+            <dt class="col-sm-2">TargetDate</dt>
+            <dd class="col-sm-10">@goal.TargetDate</dd>
+            <dt class="col-sm-2">UserId</dt>
+            <dd class="col-sm-10">@goal.UserId</dd>
+            <dt class="col-sm-2">DateCreated</dt>
+            <dd class="col-sm-10">@goal.DateCreated</dd>
+            <dt class="col-sm-2">DateUpdated</dt>
+            <dd class="col-sm-10">@goal.DateUpdated</dd>
+            <dt class="col-sm-2">CreatedBy</dt>
+            <dd class="col-sm-10">@goal.CreatedBy</dd>
+            <dt class="col-sm-2">UpdatedBy</dt>
+            <dd class="col-sm-10">@goal.UpdatedBy</dd>
+        </dl>
+        <div>
+            <a href="@($"/goals/edit?id={goal.Id}")">Edit</a> |
+            <a href="@($"/goals")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Goal? goal;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        goal = await context.Goal.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (goal is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}
