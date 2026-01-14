@@ -14,11 +14,11 @@ namespace BudgetPlanner1.Configurations.Entities
                 new BudgetPlanner1User
                 {
                     Id = "a19d3f30-f3ab-41da-b8fb-723d5f00a803",
-                    Email = "admin@localhostPlan.com",
+                    Email = "admin@localhostplan.com",
                     NormalizedEmail = "ADMIN@LOCALHOSTPLAN.COM",
                     FirstName = "Admin",
                     LastName = "User",
-                    UserName = "admin@localhostPlan.com",
+                    UserName = "admin@localhostplan.com",
                     NormalizedUserName = "ADMIN@LOCALHOSTPLAN.COM",
                     PasswordHash = hasher.HashPassword(null, "Admin123!"),
                     EmailConfirmed = true

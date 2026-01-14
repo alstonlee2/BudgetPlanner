@@ -19,6 +19,7 @@ namespace BudgetPlanner1.Data
             builder.ApplyConfiguration(new CategorySeed());
             builder.ApplyConfiguration(new GoalSeed());
             builder.ApplyConfiguration(new ExpenseSeed());
+            builder.ApplyConfiguration(new UserSeed());
         }
     }
 
