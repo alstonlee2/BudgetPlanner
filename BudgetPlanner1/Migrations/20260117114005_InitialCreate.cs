@@ -3,12 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
 namespace BudgetPlanner1.Migrations
 {
     /// <inheritdoc />
-    public partial class AddIdentity : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,6 +30,8 @@ namespace BudgetPlanner1.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -158,24 +158,84 @@ namespace BudgetPlanner1.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "Expense",
-                columns: new[] { "Id", "Amount", "CategoryId", "CreatedBy", "DateCreated", "DateUpdated", "Description", "ExpenseDate", "ExpenseId", "GoalId", "UpdatedBy", "UserId" },
-                values: new object[,]
+            migrationBuilder.CreateTable(
+                name: "Categories",
+                columns: table => new
                 {
-                    { 1, 50.75m, 1, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Grocery shopping", new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, null, null, 1 },
-                    { 2, 20.00m, 2, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Bus fare", new DateTime(2024, 1, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, null, null, 1 },
-                    { 3, 100.00m, 3, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Concert tickets", new DateTime(2024, 1, 17, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, null, null, 1 }
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Categories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Categories_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
-            migrationBuilder.InsertData(
-                table: "Goal",
-                columns: new[] { "Id", "CreatedBy", "DateCreated", "DateUpdated", "Description", "GoalId", "Name", "TargetAmount", "TargetDate", "UpdatedBy", "UserId" },
-                values: new object[,]
+            migrationBuilder.CreateTable(
+                name: "Expenses",
+                columns: table => new
                 {
-                    { 1, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Save $5000 for emergencies", 0, "Emergency Fund", 5000m, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, 1 },
-                    { 2, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Save $2000 for a vacation trip", 0, "Vacation", 2000m, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, 1 },
-                    { 3, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Save $1500 for a new laptop", 0, "New Laptop", 1500m, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, 1 }
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    ExpenseDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    GoalId = table.Column<int>(type: "int", nullable: true),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Expenses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Expenses_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Goals",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TargetAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    TargetDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Goals", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Goals_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -216,6 +276,21 @@ namespace BudgetPlanner1.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Categories_UserId",
+                table: "Categories",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Expenses_UserId",
+                table: "Expenses",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Goals_UserId",
+                table: "Goals",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -237,40 +312,19 @@ namespace BudgetPlanner1.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Categories");
+
+            migrationBuilder.DropTable(
+                name: "Expenses");
+
+            migrationBuilder.DropTable(
+                name: "Goals");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
-
-            migrationBuilder.DeleteData(
-                table: "Expense",
-                keyColumn: "Id",
-                keyValue: 1);
-
-            migrationBuilder.DeleteData(
-                table: "Expense",
-                keyColumn: "Id",
-                keyValue: 2);
-
-            migrationBuilder.DeleteData(
-                table: "Expense",
-                keyColumn: "Id",
-                keyValue: 3);
-
-            migrationBuilder.DeleteData(
-                table: "Goal",
-                keyColumn: "Id",
-                keyValue: 1);
-
-            migrationBuilder.DeleteData(
-                table: "Goal",
-                keyColumn: "Id",
-                keyValue: 2);
-
-            migrationBuilder.DeleteData(
-                table: "Goal",
-                keyColumn: "Id",
-                keyValue: 3);
         }
     }
 }

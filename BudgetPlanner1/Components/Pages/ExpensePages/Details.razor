@@ -1,50 +1,78 @@
 ﻿@page "/expenses/details"
+@rendermode InteractiveServer
+@attribute [Authorize]
 @using Microsoft.EntityFrameworkCore
 @using BudgetPlanner1.Domain
 @inject IDbContextFactory<BudgetPlanner1.Data.BudgetPlanner1Context> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Details</PageTitle>
+<PageTitle>Expense Details</PageTitle>
 
-<h1>Details</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h3 class="text-center mb-4">Expense Details</h3>
 
-<div>
-    <h2>Expense</h2>
-    <hr />
-    @if (expense is null)
-    {
-        <p><em>Loading...</em></p>
-    }
-    else {
-        <dl class="row">
-            <dt class="col-sm-2">ExpenseId</dt>
-            <dd class="col-sm-10">@expense.ExpenseId</dd>
-            <dt class="col-sm-2">Description</dt>
-            <dd class="col-sm-10">@expense.Description</dd>
-            <dt class="col-sm-2">Amount</dt>
-            <dd class="col-sm-10">@expense.Amount</dd>
-            <dt class="col-sm-2">ExpenseDate</dt>
-            <dd class="col-sm-10">@expense.ExpenseDate</dd>
-            <dt class="col-sm-2">CategoryId</dt>
-            <dd class="col-sm-10">@expense.CategoryId</dd>
-            <dt class="col-sm-2">UserId</dt>
-            <dd class="col-sm-10">@expense.UserId</dd>
-            <dt class="col-sm-2">GoalId</dt>
-            <dd class="col-sm-10">@expense.GoalId</dd>
-            <dt class="col-sm-2">DateCreated</dt>
-            <dd class="col-sm-10">@expense.DateCreated</dd>
-            <dt class="col-sm-2">DateUpdated</dt>
-            <dd class="col-sm-10">@expense.DateUpdated</dd>
-            <dt class="col-sm-2">CreatedBy</dt>
-            <dd class="col-sm-10">@expense.CreatedBy</dd>
-            <dt class="col-sm-2">UpdatedBy</dt>
-            <dd class="col-sm-10">@expense.UpdatedBy</dd>
-        </dl>
-        <div>
-            <a href="@($"/expenses/edit?id={expense.Id}")">Edit</a> |
-            <a href="@($"/expenses")">Back to List</a>
+            @if (expense is null)
+            {
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading expense details...</p>
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">@expense.Description</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Description:</dt>
+                            <dd class="col-sm-8">@expense.Description</dd>
+
+                            <dt class="col-sm-4">Amount:</dt>
+                            <dd class="col-sm-8">
+                                <strong class="text-success fs-4">@expense.Amount.ToString("C")</strong>
+                            </dd>
+
+                            <dt class="col-sm-4">Expense Date:</dt>
+                            <dd class="col-sm-8">@expense.ExpenseDate.ToString("D")</dd>
+
+                            <dt class="col-sm-4">Category ID:</dt>
+                            <dd class="col-sm-8">@expense.CategoryId</dd>
+
+                            @if (expense.GoalId.HasValue)
+                            {
+                                <dt class="col-sm-4">Goal ID:</dt>
+                                <dd class="col-sm-8">@expense.GoalId</dd>
+                            }
+                        </dl>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <small class="text-muted">
+                            <strong>Created:</strong> @expense.DateCreated.ToString("g") by @expense.CreatedBy<br />
+                            <strong>Last Updated:</strong> @expense.DateUpdated.ToString("g") by @expense.UpdatedBy
+                        </small>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-center mt-4">
+                    <a href="@($"/expenses/edit?id={expense.Id}")" class="btn btn-primary px-4">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                    </a>
+                    <a href="@($"/expenses/delete?id={expense.Id}")" class="btn btn-danger px-4">
+                        <i class="bi bi-trash me-2"></i>Delete
+                    </a>
+                    <a href="/expenses" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Back to List
+                    </a>
+                </div>
+            }
         </div>
-    }
+    </div>
 </div>
 
 @code {
@@ -56,11 +84,11 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        expense = await context.Expense.FirstOrDefaultAsync(m => m.Id == Id);
+        expense = await context.Expenses.FirstOrDefaultAsync(m => m.Id == Id);
 
         if (expense is null)
         {
-            NavigationManager.NavigateTo("notfound");
+            NavigationManager.NavigateTo("/notfound");
         }
     }
 }

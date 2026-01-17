@@ -1,54 +1,49 @@
 ﻿@page "/users/create"
-@using Microsoft.EntityFrameworkCore
-@using BudgetPlanner1.Domain
-@inject IDbContextFactory<BudgetPlanner1.Data.BudgetPlanner1Context> DbFactory
+@using BudgetPlanner1.Data
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<BudgetPlanner1User> UserManager
 @inject NavigationManager NavigationManager
 
-<PageTitle>Create</PageTitle>
+<PageTitle>Create User</PageTitle>
 
-<h1>Create</h1>
+<h1>Create User</h1>
 
-<h2>User</h2>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <EditForm method="post" Model="User" OnValidSubmit="AddUser" FormName="create" Enhance>
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert"/>
-            <div class="mb-3">
-                <label for="username" class="form-label">Username:</label> 
-                <InputText id="username" @bind-Value="User.Username" class="form-control" /> 
-                <ValidationMessage For="() => User.Username" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="email" class="form-label">Email:</label> 
-                <InputText id="email" @bind-Value="User.Email" class="form-control" /> 
-                <ValidationMessage For="() => User.Email" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="passwordhash" class="form-label">PasswordHash:</label> 
-                <InputText id="passwordhash" @bind-Value="User.PasswordHash" class="form-control" /> 
-                <ValidationMessage For="() => User.PasswordHash" class="text-danger" /> 
-            </div>        
-            <button type="submit" class="btn btn-primary">Create</button>
-        </EditForm>
+<EditForm Model="NewUser" OnValidSubmit="AddUser">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" />
+
+    <div class="mb-3">
+        <label>Username</label>
+        <InputText @bind-Value="NewUser.UserName" class="form-control" />
     </div>
-</div>
-
-<div>
-    <a href="/users">Back to List</a>
-</div>
+    <div class="mb-3">
+        <label>Email</label>
+        <InputText @bind-Value="NewUser.Email" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Password</label>
+        <InputText @bind-Value="Password" type="password" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+</EditForm>
 
 @code {
-    [SupplyParameterFromForm]
-    private User User { get; set; } = new();
+    private BudgetPlanner1User NewUser { get; set; } = new();
+    private string Password { get; set; } = string.Empty;
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddUser()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.User.Add(User);
-        await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/users");
+        var result = await UserManager.CreateAsync(NewUser, Password);
+        if (result.Succeeded)
+        {
+            NavigationManager.NavigateTo("/users");
+        }
+        else
+        {
+            foreach (var error in result.Errors)
+            {
+                Console.WriteLine(error.Description); // or display in UI
+            }
+        }
     }
 }

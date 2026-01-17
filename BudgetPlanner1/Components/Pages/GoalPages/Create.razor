@@ -1,89 +1,121 @@
 ﻿@page "/goals/create"
-@using Microsoft.EntityFrameworkCore
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using BudgetPlanner1.Data
+@using Microsoft.AspNetCore.Components.Authorization
 @using BudgetPlanner1.Domain
-@inject IDbContextFactory<BudgetPlanner1.Data.BudgetPlanner1Context> DbFactory
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@inject IDbContextFactory<BudgetPlanner1Context> DbFactory
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
 
-<PageTitle>Create</PageTitle>
+<PageTitle>Create Goal</PageTitle>
 
-<h1>Create</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <h3 class="text-center mb-4">Create New Goal</h3>
 
-<h2>Goal</h2>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <EditForm method="post" Model="Goal" OnValidSubmit="AddGoal" FormName="create" Enhance>
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert"/>
-            <div class="mb-3">
-                <label for="goalid" class="form-label">GoalId:</label> 
-                <InputNumber id="goalid" @bind-Value="Goal.GoalId" class="form-control" /> 
-                <ValidationMessage For="() => Goal.GoalId" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="name" class="form-label">Name:</label> 
-                <InputText id="name" @bind-Value="Goal.Name" class="form-control" /> 
-                <ValidationMessage For="() => Goal.Name" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="description" class="form-label">Description:</label> 
-                <InputText id="description" @bind-Value="Goal.Description" class="form-control" /> 
-                <ValidationMessage For="() => Goal.Description" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="targetamount" class="form-label">TargetAmount:</label> 
-                <InputNumber id="targetamount" @bind-Value="Goal.TargetAmount" class="form-control" /> 
-                <ValidationMessage For="() => Goal.TargetAmount" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="targetdate" class="form-label">TargetDate:</label> 
-                <InputDate id="targetdate" @bind-Value="Goal.TargetDate" class="form-control" /> 
-                <ValidationMessage For="() => Goal.TargetDate" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="userid" class="form-label">UserId:</label> 
-                <InputNumber id="userid" @bind-Value="Goal.UserId" class="form-control" /> 
-                <ValidationMessage For="() => Goal.UserId" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="datecreated" class="form-label">DateCreated:</label> 
-                <InputDate id="datecreated" @bind-Value="Goal.DateCreated" class="form-control" /> 
-                <ValidationMessage For="() => Goal.DateCreated" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="dateupdated" class="form-label">DateUpdated:</label> 
-                <InputDate id="dateupdated" @bind-Value="Goal.DateUpdated" class="form-control" /> 
-                <ValidationMessage For="() => Goal.DateUpdated" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="createdby" class="form-label">CreatedBy:</label> 
-                <InputText id="createdby" @bind-Value="Goal.CreatedBy" class="form-control" /> 
-                <ValidationMessage For="() => Goal.CreatedBy" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="updatedby" class="form-label">UpdatedBy:</label> 
-                <InputText id="updatedby" @bind-Value="Goal.UpdatedBy" class="form-control" /> 
-                <ValidationMessage For="() => Goal.UpdatedBy" class="text-danger" /> 
-            </div>        
-            <button type="submit" class="btn btn-primary">Create</button>
-        </EditForm>
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            <EditForm Model="goal" OnValidSubmit="AddGoal">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger mb-3" />
+
+                <div class="mb-3">
+                    <label class="form-label">Goal Name *</label>
+                    <InputText @bind-Value="goal.Name" class="form-control" />
+                    <ValidationMessage For="() => goal.Name" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <InputTextArea @bind-Value="goal.Description" class="form-control" rows="3" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Target Amount *</label>
+                    <InputNumber @bind-Value="goal.TargetAmount" class="form-control" />
+                    <ValidationMessage For="() => goal.TargetAmount" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Target Date *</label>
+                    <InputDate @bind-Value="goal.TargetDate" class="form-control" />
+                    <ValidationMessage For="() => goal.TargetDate" />
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-center mt-4">
+                    <button type="submit" class="btn btn-primary px-5" disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Create
+                    </button>
+                    <a href="/goals" class="btn btn-outline-secondary px-5">Cancel</a>
+                </div>
+            </EditForm>
+        </div>
     </div>
 </div>
 
-<div>
-    <a href="/goals">Back to List</a>
-</div>
-
 @code {
-    [SupplyParameterFromForm]
-    private Goal Goal { get; set; } = new();
+    private Goal goal = new Goal
+    {
+        Name = "",
+        TargetAmount = 0M,
+        TargetDate = DateTime.UtcNow
+    };
+    private string? errorMessage;
+    private bool isSaving = false;
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddGoal()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.Goal.Add(Goal);
-        await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/goals");
+        errorMessage = null;
+        isSaving = true;
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                errorMessage = "User not authenticated.";
+                return;
+            }
+
+            var now = DateTime.UtcNow;
+            var userName = authState.User.Identity?.Name ?? "Unknown";
+
+            goal.UserId = userId;
+            goal.DateCreated = now;
+            goal.DateUpdated = now;
+            goal.CreatedBy = userName;
+            goal.UpdatedBy = userName;
+
+            using var context = DbFactory.CreateDbContext();
+            context.Goals.Add(goal);
+            await context.SaveChangesAsync();
+
+            // Force reload to ensure fresh data
+            NavigationManager.NavigateTo("/goals", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+            if (ex.InnerException != null)
+                errorMessage += $" | {ex.InnerException.Message}";
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            isSaving = false;
+        }
     }
 }

@@ -1,45 +1,101 @@
 ﻿@page "/categories"
-@using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.QuickGrid
-@using BudgetPlanner1.Domain
+@attribute [Authorize]
 @using BudgetPlanner1.Data
-@implements IAsyncDisposable
-@inject IDbContextFactory<BudgetPlanner1.Data.BudgetPlanner1Context> DbFactory
+@using BudgetPlanner1.Domain
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<BudgetPlanner1Context> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
 
-@attribute [Authorize(Roles = "Administrator, User")]
+<PageTitle>My Categories</PageTitle>
 
-<PageTitle>Index</PageTitle>
+<div class="container mt-4">
+    <h1 class="text-center mb-4">My Categories</h1>
 
-<h1>Index</h1>
+    <div class="text-end mb-3">
+        <a href="/categories/create" class="btn btn-success">+ Create New Category</a>
+    </div>
 
-<p>
-    <a href="categories/create">Create New</a>
-</p>
-
-<QuickGrid Class="table" Items="context.Category">
-    <PropertyColumn Property="category => category.CategoryId" />
-    <PropertyColumn Property="category => category.Name" />
-    <PropertyColumn Property="category => category.Description" />
-    <PropertyColumn Property="category => category.UserId" />
-    <PropertyColumn Property="category => category.DateCreated" />
-    <PropertyColumn Property="category => category.DateUpdated" />
-    <PropertyColumn Property="category => category.CreatedBy" />
-    <PropertyColumn Property="category => category.UpdatedBy" />
-
-    <TemplateColumn Context="category">
-        <a href="@($"categories/edit?id={category.Id}")">Edit</a> |
-        <a href="@($"categories/details?id={category.Id}")">Details</a> |
-        <a href="@($"categories/delete?id={category.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
+    @if (categories == null)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading your categories...</p>
+        </div>
+    }
+    else if (!categories.Any())
+    {
+        <div class="alert alert-info text-center py-4">
+            You don't have any categories yet.<br />
+            Click "+ Create New Category" to get started!
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cat in categories)
+                    {
+                        <tr>
+                            <td>@cat.Name</td>
+                            <td>@(cat.Description ?? "—")</td>
+                            <td>@cat.DateCreated.ToShortDateString()</td>
+                            <td>
+                                <a href="@($"/categories/edit?id={cat.Id}")"
+                                   class="btn btn-sm btn-primary me-1">Edit</a>
+                                <a href="@($"/categories/details?id={cat.Id}")"
+                                   class="btn btn-sm btn-info me-1">Details</a>
+                                <a href="@($"/categories/delete?id={cat.Id}")"
+                                   class="btn btn-sm btn-danger">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
 
 @code {
-    private BudgetPlanner1Context context = default!;
+    private List<Category>? categories;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        context = DbFactory.CreateDbContext();
-    }
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+            if (string.IsNullOrEmpty(userId))
+            {
+                categories = new();
+                return;
+            }
+
+            using var db = DbFactory.CreateDbContext();
+
+            categories = await db.Categories
+                .Where(c => c.UserId == userId)
+                .OrderByDescending(c => c.DateCreated)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Categories load error: {ex.Message}");
+            categories = new();
+        }
+    }
 }

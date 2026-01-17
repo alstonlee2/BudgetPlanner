@@ -1,38 +1,53 @@
 ﻿@page "/users"
-@using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.QuickGrid
-@using BudgetPlanner1.Domain
+@using Microsoft.AspNetCore.Identity
 @using BudgetPlanner1.Data
-@implements IAsyncDisposable
-@inject IDbContextFactory<BudgetPlanner1.Data.BudgetPlanner1Context> DbFactory
+@inject UserManager<BudgetPlanner1User> UserManager
+@inject NavigationManager NavigationManager
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Users</PageTitle>
 
-<h1>Index</h1>
+<h1>Users</h1>
 
 <p>
-    <a href="users/create">Create New</a>
+    <a href="/users/create" class="btn btn-primary">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="context.User">
-    <PropertyColumn Property="user => user.Username" />
-    <PropertyColumn Property="user => user.Email" />
-    <PropertyColumn Property="user => user.PasswordHash" />
-
-    <TemplateColumn Context="user">
-        <a href="@($"users/edit?userid={user.UserId}")">Edit</a> |
-        <a href="@($"users/details?userid={user.UserId}")">Details</a> |
-        <a href="@($"users/delete?userid={user.UserId}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
+@if (users is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr>
+                    <td>@user.UserName</td>
+                    <td>@user.Email</td>
+                    <td>
+                        <a href="@($"/users/edit?id={user.Id}")">Edit</a> |
+                        <a href="@($"/users/details?id={user.Id}")">Details</a> |
+                        <a href="@($"/users/delete?id={user.Id}")">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
-    private BudgetPlanner1Context context = default!;
+    private List<BudgetPlanner1User>? users;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        context = DbFactory.CreateDbContext();
+        users = UserManager.Users.ToList(); // Load all users
     }
-
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
 }

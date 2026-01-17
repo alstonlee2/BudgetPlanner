@@ -11,24 +11,26 @@ namespace BudgetPlanner1.Configurations.Entities
             builder.HasData(
                 new Category
                 {
-                    Id = 1,
+                    Id = -1,
                     Name = "Food",
                     Description = "Expenses related to food and groceries",
-                    UserId = 1
+                    UserId = "fd3138d5-6fac-4ef5-aef0-36bdd1d63bf8"
+
                 },
                 new Category
                 {
-                    Id = 2,
+                    Id = -2,
                     Name = "Transportation",
                     Description = "Expenses related to transportation and travel",
-                    UserId = 1
+                    UserId = "fd3138d5-6fac-4ef5-aef0-36bdd1d63bf8"
+
                 },
                 new Category
                 {
-                    Id = 3,
+                    Id = -3,
                     Name = "Entertainment",
                     Description = "Expenses related to entertainment and leisure activities",
-                    UserId = 1
+                    UserId = "fd3138d5-6fac-4ef5-aef0-36bdd1d63bf8"
                 }
             );
         }

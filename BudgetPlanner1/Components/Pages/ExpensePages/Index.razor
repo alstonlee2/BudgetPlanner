@@ -1,46 +1,183 @@
 ﻿@page "/expenses"
+@rendermode InteractiveServer
+@attribute [Authorize]
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.QuickGrid
 @using BudgetPlanner1.Domain
 @using BudgetPlanner1.Data
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @implements IAsyncDisposable
-@inject IDbContextFactory<BudgetPlanner1.Data.BudgetPlanner1Context> DbFactory
-
-<PageTitle>Index</PageTitle>
-
-<h1>Index</h1>
-
-<p>
-    <a href="expenses/create">Create New</a>
-</p>
-
-<QuickGrid Class="table" Items="context.Expense">
-    <PropertyColumn Property="expense => expense.ExpenseId" />
-    <PropertyColumn Property="expense => expense.Description" />
-    <PropertyColumn Property="expense => expense.Amount" />
-    <PropertyColumn Property="expense => expense.ExpenseDate" />
-    <PropertyColumn Property="expense => expense.CategoryId" />
-    <PropertyColumn Property="expense => expense.UserId" />
-    <PropertyColumn Property="expense => expense.GoalId" />
-    <PropertyColumn Property="expense => expense.DateCreated" />
-    <PropertyColumn Property="expense => expense.DateUpdated" />
-    <PropertyColumn Property="expense => expense.CreatedBy" />
-    <PropertyColumn Property="expense => expense.UpdatedBy" />
-
-    <TemplateColumn Context="expense">
-        <a href="@($"expenses/edit?id={expense.Id}")">Edit</a> |
-        <a href="@($"expenses/details?id={expense.Id}")">Details</a> |
-        <a href="@($"expenses/delete?id={expense.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
-
-@code {
-    private BudgetPlanner1Context context = default!;
-
-    protected override void OnInitialized()
+@inject IDbContextFactory<BudgetPlanner1Context> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+<PageTitle>My Expenses</PageTitle>
+<div class="container mt-4">
+    <h1 class="text-center mb-4">My Expenses</h1>
+    <div class="text-end mb-3">
+        <a href="/expenses/create" class="btn btn-success">
+            <i class="bi bi-plus-circle me-2"></i>Create New Expense
+        </a>
+    </div>
+    @if (isLoading)
     {
-        context = DbFactory.CreateDbContext();
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading your expenses...</p>
+        </div>
+    }
+    else if (expenses is null || !expenses.Any())
+    {
+        <div class="alert alert-info text-center py-4">
+            You don't have any expenses yet.<br />
+            Click "Create New Expense" to get started!
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <div class="grid-container">
+                        <div class="grid-header">
+                            <div class="grid-col">Description</div>
+                            <div class="grid-col">Amount</div>
+                            <div class="grid-col">Date</div>
+                            <div class="grid-col">Category</div>
+                            <div class="grid-col">Created</div>
+                            <div class="grid-col">Actions</div>
+                        </div>
+                        @foreach (var expense in expenses)
+                        {
+                            <div class="grid-row">
+                                <div class="grid-col">@expense.Description</div>
+                                <div class="grid-col">@expense.Amount.ToString("C")</div>
+                                <div class="grid-col">@expense.ExpenseDate.ToString("d")</div>
+                                <div class="grid-col">@expense.Category.Name</div>
+                                <div class="grid-col">@expense.DateCreated.ToString("g")</div>
+                                <div class="grid-col">
+                                    <a href="/expenses/edit?id=@expense.Id" class="btn btn-sm btn-primary me-1">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                    <a href="/expenses/details?id=@expense.Id" class="btn btn-sm btn-info me-1">
+                                        <i class="bi bi-eye"></i> Details
+                                    </a>
+                                    <a href="/expenses/delete?id=@expense.Id" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                @if (expenses.Any())
+                {
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <h5>Summary</h5>
+                        <p class="mb-0">
+                            <strong>Total Expenses:</strong> @expenses.Count<br />
+                            <strong>Total Amount:</strong> @expenses.Sum(e => e.Amount).ToString("C")
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .grid-container {
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        overflow: hidden;
     }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    .grid-header {
+        display: flex;
+        background-color: #f8f9fa;
+        font-weight: bold;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .grid-row {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+        .grid-row:last-child {
+            border-bottom: none;
+        }
+
+    .grid-col {
+        flex: 1;
+        padding: 0.75rem;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+        .grid-col:last-child {
+            flex: 2; /* Wider for actions */
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .grid-header, .grid-row {
+            flex-direction: column;
+        }
+
+        .grid-col {
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.5rem;
+        }
+
+            .grid-col:last-child {
+                border-bottom: none;
+            }
+    }
+</style>
+
+@code {
+    private List<Expense> expenses = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                expenses = new();
+                return;
+            }
+            using var context = DbFactory.CreateDbContext();
+            // Include Category to show Name
+            expenses = await context.Expenses
+                .Include(e => e.Category)
+                .Where(e => e.UserId == userId)
+                .OrderByDescending(e => e.ExpenseDate)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Expenses load error: {ex.Message}");
+            expenses = new();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await Task.CompletedTask;
+    }
 }

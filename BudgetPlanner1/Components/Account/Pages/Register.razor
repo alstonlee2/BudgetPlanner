@@ -1,12 +1,14 @@
-﻿@page "/Account/Register"
-
+﻿@layout AuthLayout
+@using BudgetPlanner1.Components.Layout
+@page "/Account/Register"
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
+@using BudgetPlanner1.Domain
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using BudgetPlanner1.Data
-
+@using Microsoft.EntityFrameworkCore
 @inject UserManager<BudgetPlanner1User> UserManager
 @inject IUserStore<BudgetPlanner1User> UserStore
 @inject SignInManager<BudgetPlanner1User> SignInManager
@@ -15,56 +17,89 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 @inject RoleManager<IdentityRole> RoleManager
+@inject BudgetPlanner1.Data.BudgetPlanner1Context DbContext
+
 
 <PageTitle>Register</PageTitle>
 
-<h1>Register</h1>
-
-<div class="row">
-    <div class="col-md-4">
-        <StatusMessage Message="@Message" />
-        <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
-            <DataAnnotationsValidator />
-            <h2>Create a new account.</h2>
-            <hr />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                <label for="email">Email</label>
-                <ValidationMessage For="() => Input.Email" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.FirstName" class="form-control"
-                           autocomplete="firstname" aria-required="true" placeholder="Bill" />
-                <label for="email">First Name</label>
-                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.LastName" class="form-control"
-                           autocomplete="lastname" aria-required="true" placeholder="Gates" />
-                <label for="email">Last Name</label>
-                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+<div class="auth-container d-flex align-items-center justify-content-center my-5">
+    <div class="card shadow-sm border-0 p-4" style="max-width: 600px; width: 100%; border-radius: 1rem;">
+        <div class="card-body">
+            <div class="text-center mb-4">
+                <h1 class="h3 fw-bold">Create Account</h1>
+                <p class="text-muted">Join BudgetPlanner today and take control of your finances.</p>
             </div>
 
-            <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label for="password">Password</label>
-                <ValidationMessage For="() => Input.Password" class="text-danger" />
+            <StatusMessage Message="@Message" />
+
+            <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger mb-3" role="alert" />
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label fw-semibold">First Name</label>
+                            <InputText @bind-Value="Input.FirstName" class="form-control py-2" autocomplete="firstname" placeholder="Bill" />
+                            <ValidationMessage For="() => Input.FirstName" class="text-danger small" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label fw-semibold">Last Name</label>
+                            <InputText @bind-Value="Input.LastName" class="form-control py-2" autocomplete="lastname" placeholder="Gates" />
+                            <ValidationMessage For="() => Input.LastName" class="text-danger small" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label fw-semibold">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                        <InputText @bind-Value="Input.Email" class="form-control border-start-0 py-2" autocomplete="username" placeholder="name@example.com" />
+                    </div>
+                    <ValidationMessage For="() => Input.Email" class="text-danger small" />
+                </div>
+
+                <div class="row g-2 mb-4">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label fw-semibold">Password</label>
+                            <InputText type="password" @bind-Value="Input.Password" class="form-control py-2" autocomplete="new-password" placeholder="••••••••" />
+                            <ValidationMessage For="() => Input.Password" class="text-danger small" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label fw-semibold">Confirm</label>
+                            <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control py-2" autocomplete="new-password" placeholder="••••••••" />
+                            <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger small" />
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-100 btn btn-primary btn-lg py-2 fw-bold shadow-sm mb-3">
+                    Register Now
+                </button>
+            </EditForm>
+
+            <div class="position-relative my-4">
+                <hr />
+                <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">Or register with</span>
             </div>
-            <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label for="confirm-password">Confirm Password</label>
-                <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+
+            <div class="text-center">
+                <ExternalLoginPicker />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </EditForm>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to register.</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
+
+            <div class="text-center mt-4 pt-2">
+                <p class="text-muted small">
+                    Already have an account?
+                    <a href="Account/Login" class="text-primary fw-bold text-decoration-none">Sign In</a>
+                </p>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -98,6 +133,9 @@
             return;
         }
 
+        // ✅ Seed ONE sample category, goal & expense
+        await SeedSampleDataAsync(user);
+
         if (!await RoleManager.RoleExistsAsync("User"))
         {
             await RoleManager.CreateAsync(new IdentityRole("User"));
@@ -128,6 +166,58 @@
         RedirectManager.RedirectTo(ReturnUrl);
     }
 
+    private async Task SeedSampleDataAsync(BudgetPlanner1User user)
+    {
+        // Safety check – prevent duplicates
+        if (await DbContext.Categories.AnyAsync(c => c.UserId == user.Id))
+            return;
+
+        // 1️⃣ Category
+        var category = new Category
+        {
+            Name = "Food",
+            Description = "Sample category for food expenses",
+            UserId = user.Id,
+            DateCreated = DateTime.UtcNow,
+            DateUpdated = DateTime.UtcNow
+        };
+
+        DbContext.Categories.Add(category);
+        await DbContext.SaveChangesAsync();
+
+        // 2️⃣ Goal
+        var goal = new Goal
+        {
+            Name = "Monthly Savings",
+            Description = "Sample savings goal",
+            TargetAmount = 5000,
+            TargetDate = DateTime.UtcNow.AddMonths(1),
+            UserId = user.Id,
+            DateCreated = DateTime.UtcNow,
+            DateUpdated = DateTime.UtcNow
+        };
+
+        DbContext.Goals.Add(goal);
+        await DbContext.SaveChangesAsync();
+
+        // 3️⃣ Expense
+        var expense = new Expense
+        {
+            Description = "Sample grocery expense",
+            Amount = 250,
+            ExpenseDate = DateTime.UtcNow,
+            CategoryId = category.Id,
+            UserId = user.Id,
+            GoalId = goal.Id,
+            DateCreated = DateTime.UtcNow,
+            DateUpdated = DateTime.UtcNow
+        };
+
+        DbContext.Expenses.Add(expense);
+        await DbContext.SaveChangesAsync();
+    }
+
+
     private BudgetPlanner1User CreateUser()
     {
         try
@@ -156,7 +246,7 @@
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; } = "";
-        
+
         [Required]
         [Display(Name = "First name")]
         public string FirstName { get; set; } = "";

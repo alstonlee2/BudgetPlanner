@@ -1,139 +1,198 @@
 ﻿@page "/expenses/edit"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using BudgetPlanner1.Data
 @using Microsoft.EntityFrameworkCore
 @using BudgetPlanner1.Domain
-@inject IDbContextFactory<BudgetPlanner1.Data.BudgetPlanner1Context> DbFactory
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IDbContextFactory<BudgetPlanner1Context> DbFactory
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
 
-<PageTitle>Edit</PageTitle>
+<PageTitle>Edit Expense</PageTitle>
 
-<h1>Edit</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h3 class="text-center mb-4">Edit Expense</h3>
 
-<h2>Expense</h2>
-<hr />
-@if (Expense is null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <div class="row">
-        <div class="col-md-4">
-            <EditForm method="post" Model="Expense" OnValidSubmit="UpdateExpense" FormName="edit" Enhance>
-                <DataAnnotationsValidator />
-                <ValidationSummary role="alert"/>
-                <input type="hidden" name="Expense.Id" value="@Expense.Id" />
-                <div class="mb-3">
-                    <label for="expenseid" class="form-label">ExpenseId:</label>
-                    <InputNumber id="expenseid" @bind-Value="Expense.ExpenseId" class="form-control" />
-                    <ValidationMessage For="() => Expense.ExpenseId" class="text-danger" />
+            @if (Expense is null)
+            {
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading expense...</p>
                 </div>
-                <div class="mb-3">
-                    <label for="description" class="form-label">Description:</label>
-                    <InputText id="description" @bind-Value="Expense.Description" class="form-control" />
-                    <ValidationMessage For="() => Expense.Description" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="amount" class="form-label">Amount:</label>
-                    <InputNumber id="amount" @bind-Value="Expense.Amount" class="form-control" />
-                    <ValidationMessage For="() => Expense.Amount" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="expensedate" class="form-label">ExpenseDate:</label>
-                    <InputDate id="expensedate" @bind-Value="Expense.ExpenseDate" class="form-control" />
-                    <ValidationMessage For="() => Expense.ExpenseDate" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="categoryid" class="form-label">CategoryId:</label>
-                    <InputNumber id="categoryid" @bind-Value="Expense.CategoryId" class="form-control" />
-                    <ValidationMessage For="() => Expense.CategoryId" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="userid" class="form-label">UserId:</label>
-                    <InputNumber id="userid" @bind-Value="Expense.UserId" class="form-control" />
-                    <ValidationMessage For="() => Expense.UserId" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="goalid" class="form-label">GoalId:</label>
-                    <InputNumber id="goalid" @bind-Value="Expense.GoalId" class="form-control" />
-                    <ValidationMessage For="() => Expense.GoalId" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="datecreated" class="form-label">DateCreated:</label>
-                    <InputDate id="datecreated" @bind-Value="Expense.DateCreated" class="form-control" />
-                    <ValidationMessage For="() => Expense.DateCreated" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="dateupdated" class="form-label">DateUpdated:</label>
-                    <InputDate id="dateupdated" @bind-Value="Expense.DateUpdated" class="form-control" />
-                    <ValidationMessage For="() => Expense.DateUpdated" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="createdby" class="form-label">CreatedBy:</label>
-                    <InputText id="createdby" @bind-Value="Expense.CreatedBy" class="form-control" />
-                    <ValidationMessage For="() => Expense.CreatedBy" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="updatedby" class="form-label">UpdatedBy:</label>
-                    <InputText id="updatedby" @bind-Value="Expense.UpdatedBy" class="form-control" />
-                    <ValidationMessage For="() => Expense.UpdatedBy" class="text-danger" />
-                </div>
-                <button type="submit" class="btn btn-primary">Save</button>
-            </EditForm>
+            }
+            else
+            {
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger">@errorMessage</div>
+                }
+
+                <EditForm Model="Expense" OnValidSubmit="UpdateExpense">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger mb-3" />
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description *</label>
+                        <InputText id="description" @bind-Value="Expense.Description" class="form-control" />
+                        <ValidationMessage For="() => Expense.Description" />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="amount" class="form-label">Amount *</label>
+                            <InputNumber id="amount" @bind-Value="Expense.Amount" class="form-control" />
+                            <ValidationMessage For="() => Expense.Amount" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="expensedate" class="form-label">Expense Date *</label>
+                            <InputDate id="expensedate" @bind-Value="Expense.ExpenseDate" class="form-control" />
+                            <ValidationMessage For="() => Expense.ExpenseDate" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">Category *</label>
+                            <InputSelect id="category" @bind-Value="Expense.CategoryId" class="form-select">
+                                <option value="">-- Select Category --</option>
+                                @foreach (var cat in categories)
+                                {
+                                    <option value="@cat.Id">@cat.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="() => Expense.CategoryId" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="goalid" class="form-label">Goal (Optional)</label>
+                            <InputNumber id="goalid" @bind-Value="Expense.GoalId" class="form-control" />
+                            <ValidationMessage For="() => Expense.GoalId" />
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <small>
+                            <strong>Created:</strong> @Expense.DateCreated.ToString("g") by @Expense.CreatedBy<br />
+                            <strong>Last Updated:</strong> @Expense.DateUpdated.ToString("g") by @Expense.UpdatedBy
+                        </small>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-center mt-4">
+                        <button type="submit" class="btn btn-primary px-5" disabled="@isSaving">
+                            @if (isSaving)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            Save Changes
+                        </button>
+                        <a href="/expenses" class="btn btn-outline-secondary px-5">Cancel</a>
+                    </div>
+                </EditForm>
+            }
         </div>
     </div>
-}
-
-<div>
-    <a href="/expenses">Back to List</a>
 </div>
 
 @code {
     [SupplyParameterFromQuery]
     private int Id { get; set; }
 
-    [SupplyParameterFromForm]
     private Expense? Expense { get; set; }
+    private List<Category> categories = new();
+    private string? errorMessage;
+    private bool isSaving = false;
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        Expense ??= await context.Expense.FirstOrDefaultAsync(m => m.Id == Id);
-
-        if (Expense is null)
+        try
         {
-            NavigationManager.NavigateTo("notfound");
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                errorMessage = "User not authenticated.";
+                return;
+            }
+
+            using var context = DbFactory.CreateDbContext();
+
+            // Load the expense to edit
+            Expense = await context.Expenses
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == Id && e.UserId == userId);
+
+            if (Expense is null)
+            {
+                NavigationManager.NavigateTo("/notfound");
+                return;
+            }
+
+            // Load categories for dropdown
+            categories = await context.Categories
+                .Where(c => c.UserId == userId)
+                .OrderBy(c => c.Name)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading expense or categories: {ex.Message}";
         }
     }
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateExpense()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.Attach(Expense!).State = EntityState.Modified;
+        if (Expense is null) return;
+
+        errorMessage = null;
+        isSaving = true;
 
         try
         {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userName = authState.User.Identity?.Name ?? "Unknown";
+
+            using var context = DbFactory.CreateDbContext();
+            var existingExpense = await context.Expenses.FindAsync(Expense.Id);
+
+            if (existingExpense is null)
+            {
+                NavigationManager.NavigateTo("/notfound");
+                return;
+            }
+
+            // Update only editable fields
+            existingExpense.Description = Expense.Description;
+            existingExpense.Amount = Expense.Amount;
+            existingExpense.ExpenseDate = Expense.ExpenseDate;
+            existingExpense.CategoryId = Expense.CategoryId;
+            existingExpense.GoalId = Expense.GoalId;
+            existingExpense.DateUpdated = DateTime.UtcNow;
+            existingExpense.UpdatedBy = userName;
+
             await context.SaveChangesAsync();
+            NavigationManager.NavigateTo("/expenses", forceLoad: true);
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!ExpenseExists(Expense!.Id))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
+            errorMessage = "This expense was modified by another user. Please refresh and try again.";
         }
-
-        NavigationManager.NavigateTo("/expenses");
-    }
-
-    private bool ExpenseExists(int id)
-    {
-        using var context = DbFactory.CreateDbContext();
-        return context.Expense.Any(e => e.Id == id);
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating expense: {ex.Message}";
+            Console.WriteLine($"Error: {ex}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
     }
 }

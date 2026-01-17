@@ -101,9 +101,6 @@ namespace BudgetPlanner1.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -122,44 +119,15 @@ namespace BudgetPlanner1.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Category");
+                    b.HasIndex("UserId");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CategoryId = 0,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Expenses related to food and groceries",
-                            Name = "Food",
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CategoryId = 0,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Expenses related to transportation and travel",
-                            Name = "Transportation",
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CategoryId = 0,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Expenses related to entertainment and leisure activities",
-                            Name = "Entertainment",
-                            UserId = 1
-                        });
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("BudgetPlanner1.Domain.Expense", b =>
@@ -171,6 +139,7 @@ namespace BudgetPlanner1.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CategoryId")
@@ -191,59 +160,23 @@ namespace BudgetPlanner1.Migrations
                     b.Property<DateTime>("ExpenseDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ExpenseId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("GoalId")
                         .HasColumnType("int");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Expense");
+                    b.HasIndex("CategoryId");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Amount = 50.75m,
-                            CategoryId = 1,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Grocery shopping",
-                            ExpenseDate = new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            ExpenseId = 0,
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Amount = 20.00m,
-                            CategoryId = 2,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Bus fare",
-                            ExpenseDate = new DateTime(2024, 1, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            ExpenseId = 0,
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Amount = 100.00m,
-                            CategoryId = 3,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Concert tickets",
-                            ExpenseDate = new DateTime(2024, 1, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            ExpenseId = 0,
-                            UserId = 1
-                        });
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Expenses");
                 });
 
             modelBuilder.Entity("BudgetPlanner1.Domain.Goal", b =>
@@ -266,13 +199,11 @@ namespace BudgetPlanner1.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("GoalId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TargetAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("TargetDate")
@@ -281,72 +212,15 @@ namespace BudgetPlanner1.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Goal");
+                    b.HasIndex("UserId");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Save $5000 for emergencies",
-                            GoalId = 0,
-                            Name = "Emergency Fund",
-                            TargetAmount = 5000m,
-                            TargetDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Save $2000 for a vacation trip",
-                            GoalId = 0,
-                            Name = "Vacation",
-                            TargetAmount = 2000m,
-                            TargetDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Save $1500 for a new laptop",
-                            GoalId = 0,
-                            Name = "New Laptop",
-                            TargetAmount = 1500m,
-                            TargetDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            UserId = 1
-                        });
-                });
-
-            modelBuilder.Entity("BudgetPlanner1.Domain.User", b =>
-                {
-                    b.Property<int>("UserId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
-
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Username")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("User");
+                    b.ToTable("Goals");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -480,6 +354,41 @@ namespace BudgetPlanner1.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("BudgetPlanner1.Domain.Category", b =>
+                {
+                    b.HasOne("BudgetPlanner1.Data.BudgetPlanner1User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BudgetPlanner1.Domain.Expense", b =>
+                {
+                    b.HasOne("BudgetPlanner1.Domain.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BudgetPlanner1.Data.BudgetPlanner1User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("BudgetPlanner1.Domain.Goal", b =>
+                {
+                    b.HasOne("BudgetPlanner1.Data.BudgetPlanner1User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
